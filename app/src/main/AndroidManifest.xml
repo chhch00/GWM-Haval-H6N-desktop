@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <!-- 状态栏天气按 GPS 判城市：只有粗定位时也能走网络定位兜底 -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <!-- 全盘路径清理：Android 11+ 要读 Android/data 等受限目录，需「所有文件访问」 -->
+    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- 6.0.47 权限激活页：这两项不算「运行时权限」，系统授权页要靠清单声明才会列出本应用 -->
+    <uses-permission android:name="android.permission.WRITE_SETTINGS" />
+    <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS" tools:ignore="ProtectedPermissions" />
+    <!-- ★ 6.0.51：pm grant 只能授予「清单里声明过」的权限。之前漏了这两条，
+         自动打通跑到 pm grant WRITE_SECURE_SETTINGS 时被系统拒绝，所以永远给不上。
+         声明不等于自动获得，仍需 shell/root 执行 pm grant。 -->
+    <uses-permission android:name="android.permission.WRITE_SECURE_SETTINGS" tools:ignore="ProtectedPermissions" />
+    <uses-permission android:name="android.permission.READ_LOGS" tools:ignore="ProtectedPermissions" />
+    <!-- 覆盖原厂导航栏：悬浮窗 + 前台服务（旧版 SidebarHomeService 同一套做法） -->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <!-- 6.0.31 Car API 兜底：8.1 CarService 里这四项是 dangerous（可授予）的只读权限。
+         权限由车机 CarService 自己定义，普通手机上声明未知权限不影响安装/运行。 -->
+    <uses-permission android:name="android.car.permission.CAR_SPEED" />
+    <uses-permission android:name="android.car.permission.CAR_MILEAGE" />
+    <uses-permission android:name="android.car.permission.CAR_FUEL" />
+    <uses-permission android:name="android.car.permission.VEHICLE_DYNAMICS_STATE" />
+
+    <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
+
+    <application
+        android:name=".H6NApplication"
+        android:allowBackup="true"
+        android:hardwareAccelerated="true"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:label="@string/app_name"
+        android:usesCleartextTraffic="true"
+        android:requestLegacyExternalStorage="true"
+        android:supportsRtl="false"
+        android:theme="@style/Theme.H6N">
+
+        <!-- 默认桌面：覆盖安装必须保持与旧版一致的 intent-filter -->
+        <activity
+            android:name=".ui.main.MainActivity"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:screenOrientation="landscape"
+            android:theme="@style/Theme.H6N">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.HOME" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".ui.settings.SettingsActivity"
+            android:exported="false"
+            android:screenOrientation="landscape"
+            android:theme="@style/Theme.H6N" />
+
+        <!-- 覆盖原厂导航栏：常驻悬浮层（设置了「侧栏覆盖层」才启动，默认关） -->
+        <service
+            android:name=".ui.main.NavOverlayService"
+            android:exported="false"
+            android:stopWithTask="false" />
+
+        <!--
+          读「当前在播什么歌」（6.0.71：机油卡中间那条播放信息）。
+          本服务不读通知内容（没有覆写 onNotificationPosted），只借用「已启用的通知监听器」这个身份
+          去调 MediaSessionManager.getActiveSessions()。原因是 MEDIA_CONTENT_CONTROL 属于
+          signature|privileged，pm grant 授不了；而持有通知使用权时，getActiveSessions(componentName)
+          是唯一放行路径。嘟嘟桌面的 service/musicInfo/GetMusicInfoService 用的是同一套。
+          · exported 必须 true：系统要跨进程绑定它
+        -->
+        <service
+            android:name=".core.H6MediaListener"
+            android:exported="true"
+            android:label="@string/media_label"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+        </service>
+
+        <!--
+          开机任务（6.0.47）：BOOT_COMPLETED 后按「延迟 + 动作」执行，最常用是自动打开应用。
+          参考车机应用管家的 BootReceiver；这里不起前台服务（桌面本身就是 HOME 进程）。
+          BOOT_COMPLETED 是系统受保护广播，exported 必须 true 才能在清单里收到。
+        -->
+        <receiver
+            android:name=".core.BootReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+                <action android:name="com.htc.intent.action.QUICKBOOT_POWERON" />
+                <!-- 6.0.87：外部一键授权命令写完后发它，让桌面立刻重绑通知监听器 -->
+                <action android:name="com.h6n.launcher.GRANT_MEDIA" />
+            </intent-filter>
+        </receiver>
+
+        <!--
+          前台应用感知（无障碍服务）。旧版对应 .perm.H6AccessService / SidebarHomeService。
+          只收 typeWindowStateChanged 用来判断"前台是不是自家界面"：
+          · exported 必须 true 且带 BIND_ACCESSIBILITY_SERVICE，否则系统列表里看不到
+          · directBootAware 刻意 **不开**（6.0.48 改）：开了之后系统会在「用户还没解锁」
+            的 direct boot 阶段绑定本服务，此时进程被拉起 → Application.onCreate 里
+            读 SharedPreferences / 配置快照全部落在 CE 存储上，直接抛
+            IllegalStateException，整进程 FATAL，绑定失败；Android 14/15 的
+            设置页就会把这一条显示成「此服务出现故障」。而本服务读的全是用户配置，
+            解锁前本来就干不了任何事 —— 所以关掉它才是对的，8.1 车机行为不变。
+          · 配置在 res/xml/h6_a11y.xml（不读窗口内容；开按键过滤，只接管学习到的那一个方控键）
+        -->
+        <service
+            android:name=".ui.main.H6A11yService"
+            android:exported="true"
+            android:label="@string/a11y_label"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/h6_a11y" />
+        </service>
+
+    </application>
+
+</manifest>
