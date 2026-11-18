@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.H6N" parent="Theme.AppCompat.NoActionBar">
+        <item name="android:windowBackground">@color/bg_deep</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowFullscreen">true</item>
+        <item name="android:colorAccent">@color/accent</item>
+        <item name="android:textColorPrimary">@color/text_main</item>
+    </style>
+</resources>

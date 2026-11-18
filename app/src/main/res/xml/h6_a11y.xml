@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  桌面自带的无障碍服务配置（对照旧版 res/xml/sidebar_accessibility.xml）。
+
+  只收 typeWindowStateChanged（窗口切换）一种事件：
+  覆盖原厂导航栏的悬浮层靠它判断"现在前台是不是自家界面"。
+
+  flagRequestFilterKeyEvents / canRequestFilterKeyEvents 从 6.0.17 起打开：
+  方向盘按键映射要在任意界面（导航 / 音乐）都能收到 KeyEvent，
+  做法参考车机「应用管家」AccService.onKeyEvent。
+  ★ 开了过滤不等于吞按键：H6A11yService 只对「学习模式」和「已绑定的那个键」
+    返回 true，其余一律 return false 交回系统（音量 / 返回 / 切歌照旧）。
+
+  仍然刻意不开 canRetrieveWindowContent：不读任何控件文本 / 窗口内容。
+-->
+<accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
+    android:description="@string/a11y_desc"
+    android:summary="@string/a11y_summary"
+    android:accessibilityEventTypes="typeWindowStateChanged"
+    android:accessibilityFeedbackType="feedbackGeneric"
+    android:notificationTimeout="100"
+    android:accessibilityFlags="flagDefault|flagRequestFilterKeyEvents"
+    android:canRetrieveWindowContent="false"
+    android:canRequestFilterKeyEvents="true" />

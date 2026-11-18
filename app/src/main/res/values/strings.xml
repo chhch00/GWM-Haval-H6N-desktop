@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">H6N Launcher</string>
+    <string name="settings">设置</string>
+    <string name="speed">当前车速</string>
+    <string name="tire">胎压</string>
+    <string name="temp">温度</string>
+    <string name="range">续航</string>
+    <string name="power_off_hint">熄火后 10 秒暂停后台活动</string>
+
+    <!-- 音乐卡片（只借用"已启用的通知监听器"身份去读 MediaSession，不读通知内容） -->
+    <string name="media_label">H6N Launcher · Music</string>
+
+    <!-- 无障碍服务（前台感知 + 方向盘按键映射；不读窗口内容，只接管学习到的那一个键） -->
+    <string name="a11y_label">H6N Launcher · Foreground</string>
+    <string name="a11y_summary">监听应用切换与方向盘按键，不读取窗口内容</string>
+    <string name="a11y_desc">开启后有三件事：① 桌面知道当前前台是哪个应用，覆盖原厂导航栏的侧栏在切到导航 / 音乐时自动出现、回到桌面立刻收起；② 桌面顶部向下划时把原车状态栏一步拉下来；③ 方向盘按键映射在任意界面生效，用于在「标准 / 运动」驾驶模式之间切换。本服务只接收「应用切换」事件中的包名和按键的键值数字，不读取任何控件文字或窗口内容；按键只在您主动做「按键学习」时、或命中您自己绑定的那一个键时才会被接管，音量、返回、切歌等其它按键一律交回系统。可在桌面「设置 → 车机 → 方向盘切换驾驶模式」里关闭或清除绑定。</string>
+</resources>
