@@ -116,5 +116,7 @@ Tier-1 supplier or navigation vendor. Names of third-party apps appear only as l
 targets. Vehicle control is inherently risky: you are responsible for anything you send
 to a real car.
 
-No license is granted by default — if you intend to reuse this code, open an issue so a
-license can be chosen explicitly.
+## License / 开源协议
+
+This project is licensed under the [MIT License](LICENSE).  
+本项目基于 [MIT 协议](LICENSE) 开源，版权所有 © 2026 chhch00。
